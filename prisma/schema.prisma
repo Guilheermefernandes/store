@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users{
+  id Int @id @default(autoincrement())
+  name String
+  lastName String 
+  email String @unique
+  password String
+  state String
+  city String
+  neighborhood String
+  street String 
+  number Int
+
+  @@map("users")
+}
+
+model Tshirt_size {
+  id Int @id @default(autoincrement())
+  size String @db.VarChar(2)
+
+  @@map("tshirt_size")
+}
+
+model Tshirt {
+  id Int @id @default(autoincrement())
+  title String @db.VarChar(255)
+  price Int
+
+  @@map("tshirt")
+}
+
+model Tshirt_color {
+  id Int @id @default(autoincrement())
+  size String @db.VarChar(16)
+  name_color String @db.VarChar(50)
+
+  @@map("tshirt_color")
+}
+
+model Tshirt_data{
+  id Int @id @default(autoincrement())
+  
+}
