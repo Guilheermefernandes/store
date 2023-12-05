@@ -1,3 +1,7 @@
+const { PrismaClient } = require('@prisma/client');
+
+const prisma = new PrismaClient();
+
 module.exports = {
     createdAd: async (req, res) => {
 
@@ -19,18 +23,37 @@ module.exports = {
 
                 if(field === 'price'){
 
-                    const value = parseInt(req.body[field]);
-                    console.log(typeof value)
+                    let value = req.body[field];
+                    value = parseFloat(value);
 
                     if(typeof value !== 'number'){
-                        res.json({ response: false, msg: 'Dados incorretos!' });
+                        res.json({ 
+                            response: false, 
+                            msg: 'Dados incorretos!' });
                         return;
                     }
                 
                     newAd.price = value;
+                    continue;
                 }
 
                 if(field === 'availability'){
+                    continue;
+                }
+
+                if(field === 'discount'){
+
+                    let value = req.body[field];
+                    value = parseFloat(value);
+
+                    if(typeof value !== 'number'){
+                        res.json({ 
+                            response: false, 
+                            msg: 'Dados incorretos!' });
+                        return;
+                    }
+
+                    newAd.discount = value;
                     continue;
                 }
 
@@ -38,52 +61,82 @@ module.exports = {
             }
         }
 
-        /*
         let tshirt;
         try{
-            const createdTshirt = Tshirt.build(newAd);
-            tshirt = await createdTshirt.save();
+            tshirt = await prisma.tshirt.create({
+                data: newAd
+            });
+        }catch(err){
+            console.log('Error: ', err);
+            console.log('Error: ', err);
+            res.status(500).json({ 
+                response: false, 
+                msg: 'Ocorreu um erro interno! Tente novamente.'});
+            return;
+        }
 
-            console.log('Aqui esta sua menssagem que você que ver: ', tshirt.get().id);
-
-            if(req.body.availability){
-                        
-                const objectDataTshirt = req.body.availability;
-                for(let i in objectDataTshirt){
-                    const addReferencesTshirt = {};
+        if(req.body.availability){
                     
-                    const valueColor = parseInt(objectDataTshirt[0].color);
-                    const valueSize = parseInt(objectDataTshirt[0].size);
-                    const valueQtd = parseInt(objectDataTshirt[0].qtd);
+            const objectDataTshirt = JSON.parse(req.body.availability);
+            for(let i in objectDataTshirt){
+                const addReferencesTshirt = {};
 
-                    console.log(typeof valueColor)
+                let valueColor = objectDataTshirt[i].color;
+                let valueSize = objectDataTshirt[i].size;
+                let valueQtd = objectDataTshirt[i].qtd;
 
-                    addReferencesTshirt.color = valueColor;
-                    addReferencesTshirt.size = valueSize;
-                    addReferencesTshirt.tshirt = tshirt.get().id;
-                    addReferencesTshirt.qtd_tshirt = valueQtd;
-
-                    try{
-                        const saveDataTshirt = TshirtData.build(addReferencesTshirt);
-                        await saveDataTshirt.save();
-                    }catch(err){
-                        console.log('Error: ', err);
-                        res.status(500).json({ response: false, msg: 'Ocorreu um erro interno! Tente novamente.'});
-                        return;
-                    }
+                if(typeof valueColor !== 'number' 
+                    || typeof valueSize !== 'number' || typeof valueQtd !== 'number'){
                     
+                        valueColor = parseInt(objectDataTshirt[i].color);
+                        valueSize = parseInt(objectDataTshirt[i].size);
+                        valueQtd = parseInt(objectDataTshirt[i].qtd);
+
                 }
 
+                if(isNaN(valueColor) || isNaN(valueSize) || isNaN(valueQtd)){
+                    res.status(400).json({ 
+                        response: false,
+                        msg: 'Ocorreu um erro interno! Tente novamente.'
+                    });
+
+                    await prisma.tshirt.delete({
+                        where: {
+                            id: tshirt.id
+                        }
+                    });
+
+                    return;
+
+                }
+
+                addReferencesTshirt.color_id = valueColor;
+                addReferencesTshirt.size_id = valueSize;
+                addReferencesTshirt.tshirt_id = tshirt.id;
+                addReferencesTshirt.qtd_tshirt = valueQtd;
+
+                try{
+                    const saveDataTshirt = 
+                        await prisma.tshirt_data.create({
+                            data: addReferencesTshirt
+                        });
+                }catch(err){
+
+                    await prisma.tshirt.delete({
+                        where: {
+                            id: tshirt.id
+                        }
+                    });
+
+                    console.log('Error: ', err);
+                    res.status(500).json({ response: false, msg: 'Ocorreu um erro interno! Tente novamente.'});
+                    return;
+                }   
             }
-        }catch(error){
-            console.log('Error: ', error);
-            res.status(500).json({ response: false, msg: 'Ocorreu um erro interno! Tente novamente.'});
-            return;
         }
 
         res.status(201).json({ response: true, msg: 'Camisa cadastrada!' });
 
-        */
     },
     getAd: async (req, res) => {
 

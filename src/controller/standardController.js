@@ -20,7 +20,7 @@ module.exports = {
 
         let size;
         try{
-            size = await prisma.tshirt_color.findMany();
+            size = await prisma.tshirt_size.findMany();
         }catch(err){
             console.log('Error: ', err);
             res.status(500).json({ response: false, msg: 'Tente novamente!' });
