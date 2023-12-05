@@ -1,12 +1,13 @@
-const Color = require("../models/Color");
-const Size = require('../models/Size')
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient();
 
 module.exports = {
     colors: async (req, res) => {
         
         let colors;
         try{
-            colors = await Color.findAll();
+            colors = await prisma.tshirt_color.findMany();
         }catch(err){
             console.log('Error: ', err);
             res.status(500).json({ response: false, msg: 'Tente novamente!' });
@@ -19,7 +20,7 @@ module.exports = {
 
         let size;
         try{
-            size = await Size.findAll();
+            size = await prisma.tshirt_color.findMany();
         }catch(err){
             console.log('Error: ', err);
             res.status(500).json({ response: false, msg: 'Tente novamente!' });

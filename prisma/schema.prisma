@@ -21,6 +21,7 @@ model Users{
   neighborhood String
   street String 
   number Int
+  permission Int
 
   @@map("users")
 }
@@ -28,6 +29,7 @@ model Users{
 model Tshirt_size {
   id Int @id @default(autoincrement())
   size String @db.VarChar(2)
+  Tshirt_data Tshirt_data[]
 
   @@map("tshirt_size")
 }
@@ -35,20 +37,33 @@ model Tshirt_size {
 model Tshirt {
   id Int @id @default(autoincrement())
   title String @db.VarChar(255)
-  price Int
+  price Float
+  discount Float
+  collection Int? 
+  describe_tshirt String
+  Tshirt_data Tshirt_data[]
 
   @@map("tshirt")
 }
 
 model Tshirt_color {
   id Int @id @default(autoincrement())
-  size String @db.VarChar(16)
+  hexa_decimal String @db.VarChar(16)
   name_color String @db.VarChar(50)
+  Tshirt_data Tshirt_data[]
 
   @@map("tshirt_color")
 }
 
 model Tshirt_data{
   id Int @id @default(autoincrement())
-  
+  qtd_tshirt Int
+  color_id Int
+  size_id Int
+  tshirt_id Int
+  tshirt_color Tshirt_color @relation(fields: [color_id], references: [id])
+  tshirt_size Tshirt_size @relation(fields: [size_id], references: [id])
+  tshirt Tshirt @relation(fields: [tshirt_id], references: [id])
+
+  @@map("tshirt_data")
 }

@@ -1,8 +1,9 @@
 const validator = require('validator');
-const User = require('../models/User');
+const { PrismaClient, Prisma } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const { generateToken } = require('../config/passport');
 
+const prisma = new PrismaClient();
 
 module.exports = {
     signin: async (req, res) => {
@@ -26,7 +27,7 @@ module.exports = {
 
         let user;
         try{
-            user = await User.findOne({
+            user = await prisma.users.findUnique({
                 where: {
                     email: email
                 }
@@ -81,7 +82,7 @@ module.exports = {
 
                         const email = req.body[field];
 
-                        searchUserDB = await User.findOne({
+                        searchUserDB = await prisma.users.findUnique({
                             where: {
                                 email: email
                             }
@@ -89,8 +90,6 @@ module.exports = {
                     }catch(error){
                         //TODO
                     }
-
-                    console.log(searchUserDB);
 
                     if(searchUserDB){
                         res.status(400).json({ response: false, msg: 'Esse email já existe em nosso sistema!' });
@@ -119,14 +118,20 @@ module.exports = {
                     continue;
                 }
 
+                if(field === 'number'){
+                    user.number = parseInt(req.body[field])
+                    continue;
+                }
+
                 user[field] = req.body[field];
 
             }
         }
 
         try{
-            const createdUser = User.build(user);
-            await createdUser.save();
+            const createdUser = await prisma.users.create({
+                data: user
+            });
         }catch(error){
             console.log('Error: ', error);
             res.status(500).json({ response: false, msg: 'Ocorreu um erro interno! Tente novamente.'});

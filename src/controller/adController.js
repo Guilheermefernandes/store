@@ -1,6 +1,3 @@
-const Tshirt = require("../models/Tshirt");
-const TshirtData = require("../models/TshirtData");
-
 module.exports = {
     createdAd: async (req, res) => {
 
@@ -41,6 +38,7 @@ module.exports = {
             }
         }
 
+        /*
         let tshirt;
         try{
             const createdTshirt = Tshirt.build(newAd);
@@ -85,6 +83,7 @@ module.exports = {
 
         res.status(201).json({ response: true, msg: 'Camisa cadastrada!' });
 
+        */
     },
     getAd: async (req, res) => {
 

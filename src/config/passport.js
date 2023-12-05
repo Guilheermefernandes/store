@@ -2,10 +2,10 @@ const passport = require('passport');
 const jwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const jwt = require('jsonwebtoken');
-
-const User = require('../models/User');
-
 const dotenv = require('dotenv');
+const { PrismaClient } = require('@prisma/client');
+
+const prisma = new PrismaClient();
 
 const opts = {};
     
@@ -14,7 +14,7 @@ opts.secretOrKey = process.env.SECRET_KEY
 
 passport.use(new jwtStrategy(opts, async function(payload, done){
     try{
-        const user = await User.findOne({
+        const user = await prisma.users.findUnique({
             where: {
                 id: payload.id
             }

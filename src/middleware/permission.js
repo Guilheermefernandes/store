@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
-const User = require('../models/User');
+const { PrismaClient } = require('@prisma/client');
+
+const prisma = new PrismaClient();
 
 const permission = (nPermission) => {
     return async (req, res, next) => {
@@ -12,7 +14,7 @@ const permission = (nPermission) => {
         let user;
         try{
 
-            user = await User.findOne({
+            user = await prisma.users.findUnique({
                 where: {
                     id: data.id
                 }
