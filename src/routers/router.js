@@ -15,6 +15,11 @@ router.get('/me/user',
     permission(1),
     userController.getUser
 );
+router.post('/me/user/edit', 
+    passport.authenticate('jwt', {session: false}),
+    permission(1),
+    userController.editUser
+);
 
 router.get('/ads/all',
     adController.getAd
