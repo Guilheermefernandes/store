@@ -1,29 +1,36 @@
 const request = require('supertest');
 const app = require('../../../app');
+const { PrismaClient } = require('@prisma/client');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 describe('', () => {
 
     const data = {
-        name: 'store',
-        lastName: 'storeTeste',
-        email: 'store@store.com',
-        password: '@Guilherme91711302',
+        name: 'Vitoria',
+        lastName: 'Lima',
+        email: 'vitoriasales@store.com',
+        password: '@Vitoria91711302',
         state: 'Minas Gerais',
         city: 'Ipatinga',
         neighborhood: 'Granjas Vagalume',
         street: 'Rua Piau',
         number: 60,
-        permission: 1
+        permission: 2
     }
 
-    beforeAll(async (done) => {
-        try{
-            await User.sync({force: true});
-            done();
-        }catch(err){
-            console.log('Error: ',err);
-        }
-    }, 10000);
+    let prisma;
+
+    beforeAll(() => {
+        prisma = new PrismaClient({
+            datasources: {
+                db: {
+                    url: process.env.DATABASE_TEST_URL
+                } 
+            }
+        });
+    });
 
     it('Signup test', (done) => {
 
@@ -37,6 +44,6 @@ describe('', () => {
                 return done();
             })
 
-    }, 10000);
+    });
 
 });

@@ -158,6 +158,129 @@ module.exports = {
         });
 
     },
+    editAd: async (req, res) => {
+
+        const user = req.user;
+
+        // TODO
+        let { clothing_id } = req.body;
+        if(clothing_id === undefined){
+
+            res.status(404).json({
+                response: false,
+                msg: 'Não conseguimos indetificar o produto! Tente novamente.'
+            });
+            return;
+
+        }
+        if(typeof clothing_id !== 'number'){
+            clothing_id = parseInt(clothing_id);
+        }
+
+        const fields = [
+            'title',
+            'price',
+            'discount',
+            'describe_part',
+            'collection'
+        ];
+
+        const fieldsUpdate = {};
+
+        for(const field of fields){
+            
+            if(req.body[field]){
+
+                if(field === 'price' || field === 'discount'){
+                    let value = req.body[field];
+
+                    if(typeof value !== 'number'){
+                        value = parseInt(value);
+                    }
+
+                    fieldsUpdate[field] = value; 
+                    continue;
+                };
+
+                if(field === 'title'){
+                    const count_txt = req.body[field].length;
+                    if(count_txt > 255){
+
+                        res.status(404).json({
+                            response: false,
+                            msg: 'Você excedeu o numero de caracteres! Ate 255'
+                        });
+                        return;
+
+                    }
+
+                    fieldsUpdate[field] = req.body[field];
+                    continue;
+
+                }
+
+                if(field === 'describe_part'){
+                    const count_txt = req.body[field].length;
+                    if(count_txt > 1000){
+
+                        res.status(404).json({
+                            response: false,
+                            msg: 'Você excedeu o numero de caracteres! Ate 1000'
+                        });
+                        return;
+
+                    }
+
+                    fieldsUpdate[field] = req.body[field];
+                    continue;
+
+                }
+
+                fieldsUpdate[field] = req.body[field];
+
+            }
+        
+        }
+
+        try{
+
+            const clothing = await 
+                prisma.clothing_parts.findUnique({
+                    where: {
+                        id: clothing_id
+                    }
+                });
+            
+            if(!clothing){
+                res.status(404).json({
+                    response: false,
+                    msg: 'Talvez esse produto não existe mais!'
+                });
+                return;
+            }
+
+            await prisma.clothing_parts.update({
+                where: {
+                    id: clothing.id
+                },
+                data: fieldsUpdate
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno em nosso servidor! Tente novamente.'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            response: true,
+            msg: 'Dados alterdos com sucesso!'
+        });
+
+    },
     getAd: async (req, res) => {
 
 
