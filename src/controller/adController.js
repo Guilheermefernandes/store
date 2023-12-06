@@ -152,7 +152,10 @@ module.exports = {
             }
         }
 
-        res.status(201).json({ response: true, msg: 'Camisa cadastrada!' });
+        res.status(201).json({
+            response: true, 
+            msg: 'Camisa cadastrada!' 
+        });
 
     },
     getAd: async (req, res) => {
@@ -297,7 +300,105 @@ module.exports = {
             return;
         }
 
-        res.status(500).json({ response: true, msg: 'Comentário eviado com sucesso!' });
+        res.status(500).json({
+            response: true, 
+            msg: 'Comentário eviado com sucesso!' 
+        });
+
+    },
+    addCart: async (req, res) => {
+
+        const user = req.user;
+
+        let {
+            clothing_id,
+            color_id,
+            size_id,
+            qtd
+        } = req.body;
+    
+        if(clothing_id === undefined || color_id === undefined 
+            || size_id === undefined || qtd === undefined ){
+
+            res.status(404).json({
+                response: false,
+                msg: 'Nem todos/ ou todos os dados não foram definidos! '
+            });
+            return;
+
+        }
+
+        if(typeof clothing_id !== 'number' || typeof color_id !== 'number'
+            || typeof size_id !== 'number' || typeof qtd !== 'number' ){
+
+            clothing_id = parseInt(clothing_id);
+            color_id = parseInt(color_id);
+            size_id = parseInt(size_id);
+            qtd = parseInt(qtd);
+
+        }
+
+        try{
+
+            const clothing = await prisma.clothing_parts.findUnique({
+                where: {
+                    id: clothing_id
+                }
+            });
+
+            if(!clothing){
+                res.status(404).json({
+                    response: false,
+                    msg: 'Produto não econtrado! Tente novamente.'
+                });
+                return;
+            }
+
+            const clothing_verification = await 
+                prisma.parts_data.findFirst({
+                    where: {
+                        part_id: clothing.id,
+                        color_id: color_id,
+                        size_id: size_id
+                    }
+                });
+
+            if(clothing_verification.qtd_parts === 0 
+                || clothing_verification.qtd_parts < qtd){
+
+                res.status(404).json({
+                    response: false,
+                    msg: `Você pediu ${qtd} peças, temos 
+                        ${clothing_verification.qtd_parts} em nosso estoque`
+                });
+                return;
+            }
+
+            const data_shopping_cart = {
+                user_id: user.id,
+                clothing_id: clothing.id,
+                color_id: color_id,
+                size_id: size_id,
+                qtd_parts: qtd
+            }
+
+            await prisma.shopping_cart.create({
+                data: data_shopping_cart
+            });
+
+        }catch(err){
+            console.log('Error: ', err)
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno em nosso servidor! Tente novamente.'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            response: true, 
+            msg: 'Produto adiciondo ao carrinho!' 
+        });
 
     }
 

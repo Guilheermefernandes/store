@@ -25,6 +25,7 @@ model Users{
 
   rating Rating[]
   comments Comments[]
+  shopping_cart Shopping_cart[]
 
   @@map("users")
 }
@@ -32,7 +33,9 @@ model Users{
 model Parts_size {
   id Int @id @default(autoincrement())
   size String @db.VarChar(2)
+
   parts_data Parts_data[]
+  shopping_cart Shopping_cart[]
 
   @@map("parts_size")
 }
@@ -55,6 +58,7 @@ model Clothing_parts {
   parts_data Parts_data[]
   rating Rating[]
   comments Comments[]
+  shopping_cart Shopping_cart[]
 
 
   @@map("clothing_parts")
@@ -82,7 +86,9 @@ model Parts_color {
   id Int @id @default(autoincrement())
   hexa_decimal String @db.VarChar(16)
   name_color String @db.VarChar(50)
+
   parts_data Parts_data[]
+  shopping_cart Shopping_cart[]
 
   @@map("parts_color")
 }
@@ -133,4 +139,20 @@ model Comments {
   users Users @relation(fields: [user_id], references: [id])
 
   @@map("comments")
+}
+
+model Shopping_cart{
+  id Int @id @default(autoincrement())
+  user_id Int
+  clothing_id Int
+  color_id Int
+  size_id Int
+  qtd_parts Int
+
+  users Users @relation(fields: [user_id], references: [id])
+  clothing_parts Clothing_parts @relation(fields: [clothing_id], references: [id])
+  parts_color Parts_color @relation(fields: [color_id], references: [id])
+  parts_size Parts_size @relation(fields: [size_id], references: [id])
+
+  @@map("shopping_cart")
 }

@@ -39,4 +39,11 @@ router.post('/ad/comment',
     adController.addComment
 );
 
+// Shopping Cart
+router.post('/add/cart/product',
+    passport.authenticate('jwt', {session: false}),
+    permission(1),
+    adController.addCart
+);
+
 module.exports = router;
