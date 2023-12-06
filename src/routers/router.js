@@ -33,5 +33,10 @@ router.post('/ad/rating',
     permission(1),
     adController.rating
 );
+router.post('/ad/comment', 
+    passport.authenticate('jwt', {session: false}),
+    permission(1),
+    adController.addComment
+);
 
 module.exports = router;

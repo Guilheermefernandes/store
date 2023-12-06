@@ -166,7 +166,7 @@ module.exports = {
         let { clothing_id, note } = req.body;
 
         if(clothing_id === null || 
-            clothing_id === undefined || note == null || note === undefined ){
+            clothing_id === undefined || note === null || note === undefined ){
 
             res.status(404).json({
                 response: false,
@@ -227,6 +227,77 @@ module.exports = {
             response: true,
             msg: 'Sua avaliação foi enviada com sucesso!'
         });
+
+    },
+    addComment: async (req, res) => {
+
+        const user = req.user;
+
+        let { product_id, message } = req.body;
+
+        if(product_id === undefined 
+            || message === undefined){
+
+            res.status(404).json({ 
+                response: false,
+                msg: 'Dados incompletos!'
+            });
+            return;
+
+        };
+
+        if(typeof product_id !== 'number'){
+           product_id = parseInt(product_id)
+        }
+
+        if(typeof message !== 'string'){
+            res.status(404).json({
+                response: false,
+                msg: 'Dados de entrada icorretos'
+            });
+            return;
+        }
+
+        try{
+
+            const comments = await prisma.comments.findMany({
+                where: {
+                    user_id: user.id
+                }
+            });
+
+            for(let i=0;i<comments.length;i++){
+
+                if(comments[i].clothing_id === product_id){
+                    res.status(422).json({
+                        response: false,
+                        msg: 'Você já avaliou esse produto!'
+                    });
+                    return;
+                }
+
+            }
+
+            const dataComments = {
+                user_id: user.id,
+                clothing_id: product_id,
+                comment: message
+            }
+
+            await prisma.comments.create({
+                data: dataComments
+            });
+
+        }catch(err){
+            console.log('Error: ', err)
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno em nosso servidor! Tente novamente.'
+            });
+            return;
+        }
+
+        res.status(500).json({ response: true, msg: 'Comentário eviado com sucesso!' });
 
     }
 
