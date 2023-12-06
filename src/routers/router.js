@@ -25,4 +25,13 @@ router.get('/ads/all',
     adController.getAd
 );
 
+
+// Rating and Comments
+
+router.post('/ad/rating',
+    passport.authenticate('jwt', {session: false}),
+    permission(1),
+    adController.rating
+);
+
 module.exports = router;

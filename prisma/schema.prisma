@@ -23,47 +23,114 @@ model Users{
   number Int
   permission Int
 
+  rating Rating[]
+  comments Comments[]
+
   @@map("users")
 }
 
-model Tshirt_size {
+model Parts_size {
   id Int @id @default(autoincrement())
   size String @db.VarChar(2)
-  Tshirt_data Tshirt_data[]
+  parts_data Parts_data[]
 
-  @@map("tshirt_size")
+  @@map("parts_size")
 }
 
-model Tshirt {
+model Clothing_parts {
   id Int @id @default(autoincrement())
   title String @db.VarChar(255)
   price Float
   discount Float
-  collection Int? 
-  describe_tshirt String
-  Tshirt_data Tshirt_data[]
+  describe_part String
+  collection_id Int?
+  type_id Int
+  product_line_id Int
+  date_created DateTime
 
-  @@map("tshirt")
+  collection Collection? @relation(fields: [collection_id], references: [id])
+  types Types @relation(fields: [type_id], references: [id])
+  product_line Product_line @relation(fields: [product_line_id], references: [id])
+
+  parts_data Parts_data[]
+  rating Rating[]
+  comments Comments[]
+
+
+  @@map("clothing_parts")
 }
 
-model Tshirt_color {
+model Types {
+  id Int @id @default(autoincrement())
+  name String
+
+  Clothing_parts Clothing_parts[]
+
+  @@map("types")
+}
+
+model Product_line{
+  id Int @id @default(autoincrement())
+  name String
+
+  clothing_parts Clothing_parts[]
+
+  @@map("product_line")
+}
+
+model Parts_color {
   id Int @id @default(autoincrement())
   hexa_decimal String @db.VarChar(16)
   name_color String @db.VarChar(50)
-  Tshirt_data Tshirt_data[]
+  parts_data Parts_data[]
 
-  @@map("tshirt_color")
+  @@map("parts_color")
 }
 
-model Tshirt_data{
+model Parts_data{
   id Int @id @default(autoincrement())
-  qtd_tshirt Int
+  qtd_parts Int
   color_id Int
   size_id Int
-  tshirt_id Int
-  tshirt_color Tshirt_color @relation(fields: [color_id], references: [id])
-  tshirt_size Tshirt_size @relation(fields: [size_id], references: [id])
-  tshirt Tshirt @relation(fields: [tshirt_id], references: [id])
+  part_id Int
+  parts_color Parts_color @relation(fields: [color_id], references: [id])
+  parts_size Parts_size @relation(fields: [size_id], references: [id])
+  clothing_parts Clothing_parts @relation(fields: [part_id], references: [id])
 
-  @@map("tshirt_data")
+  @@map("parts_data")
+}
+model Collection{
+  id Int @id @default(autoincrement())
+  name String
+  describe String @db.VarChar(2000)
+  date_created DateTime
+  background String?
+
+  clothing_parts Clothing_parts[]
+
+  @@map("collection")
+}
+
+model Rating{
+  id Int @id @default(autoincrement())
+  clothing_id Int
+  user_id Int
+  note Int
+
+  clothing_parts Clothing_parts @relation(fields: [clothing_id], references: [id])
+  users Users @relation(fields: [user_id], references: [id])
+
+  @@map("rating")
+}
+
+model Comments {
+  id Int @id @default(autoincrement())
+  clothing_id Int
+  user_id Int
+  comment String @db.VarChar(5000)
+
+  clothing_parts Clothing_parts @relation(fields: [clothing_id], references: [id])
+  users Users @relation(fields: [user_id], references: [id])
+
+  @@map("comments")
 }

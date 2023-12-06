@@ -10,9 +10,11 @@ module.exports = {
         const fields = [
             'title',
             'price',
-            'describe_tshirt',
-            'collection',
+            'describe_part',
+            'collection_id',
             'discount',
+            'type_id',
+            'product_line_id',
             'availability'
         ];
 
@@ -57,13 +59,28 @@ module.exports = {
                     continue;
                 }
 
+                if(field === 'type_id' || field === 'collection_id' 
+                    || field === 'product_line_id'){
+
+                        let value = req.body[field];
+                        if(typeof value !== 'number'){
+                            value = parseInt(value); 
+                        }
+
+                        newAd[field] = value;
+                        continue;
+
+                }
+
                 newAd[field] = req.body[field];
             }
         }
 
-        let tshirt;
+        newAd.date_created = new Date();
+
+        let clothing;
         try{
-            tshirt = await prisma.tshirt.create({
+            clothing = await prisma.clothing_parts.create({
                 data: newAd
             });
         }catch(err){
@@ -100,9 +117,9 @@ module.exports = {
                         msg: 'Ocorreu um erro interno! Tente novamente.'
                     });
 
-                    await prisma.tshirt.delete({
+                    await prisma.clothing_parts.delete({
                         where: {
-                            id: tshirt.id
+                            id: clothing.id
                         }
                     });
 
@@ -112,19 +129,19 @@ module.exports = {
 
                 addReferencesTshirt.color_id = valueColor;
                 addReferencesTshirt.size_id = valueSize;
-                addReferencesTshirt.tshirt_id = tshirt.id;
-                addReferencesTshirt.qtd_tshirt = valueQtd;
+                addReferencesTshirt.part_id = clothing.id;
+                addReferencesTshirt.qtd_parts = valueQtd;
 
                 try{
                     const saveDataTshirt = 
-                        await prisma.tshirt_data.create({
+                        await prisma.parts_data.create({
                             data: addReferencesTshirt
                         });
                 }catch(err){
 
                     await prisma.tshirt.delete({
                         where: {
-                            id: tshirt.id
+                            id: clothing.id
                         }
                     });
 
@@ -141,5 +158,76 @@ module.exports = {
     getAd: async (req, res) => {
 
 
+    },
+    rating: async (req, res) => {
+
+        const user = req.user;
+
+        let { clothing_id, note } = req.body;
+
+        if(clothing_id === null || 
+            clothing_id === undefined || note == null || note === undefined ){
+
+            res.status(404).json({
+                response: false,
+                msg: 'Dados incompletos! Tente novamente'
+            });
+            return;
+
+        }
+
+        if(typeof note !== 'number' 
+            || typeof clothing_id !== 'number'){
+                
+            note = parseInt(note);
+            clothing_id = parseInt(clothing_id);
+        
+        };
+
+        try{
+
+            const rating = await prisma.rating.findMany({
+                where: {
+                    user_id: user.id
+                }
+            });
+
+            for(let i=0;i<rating.length;i++){
+
+                if(rating[i].clothing_id === clothing_id){
+                    res.status(422).json({
+                        response: false,
+                        msg: 'Você já avaliou esse produto!'
+                    });
+                    return;
+                }
+
+            }
+
+            const createdRating = {
+                clothing_id,
+                user_id: user.id,
+                note
+            }
+
+            await prisma.rating.create({
+                data: createdRating
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno em nosso servidor! Tente novamente.'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            response: true,
+            msg: 'Sua avaliação foi enviada com sucesso!'
+        });
+
     }
+
 }
