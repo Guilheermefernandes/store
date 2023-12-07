@@ -10,7 +10,7 @@ describe('', () => {
     const data = {
         name: 'Vitoria',
         lastName: 'Lima',
-        email: 'vitoriasales@store.com',
+        email: 'vitorialima@store.com',
         password: '@Vitoria91711302',
         state: 'Minas Gerais',
         city: 'Ipatinga',
@@ -22,7 +22,7 @@ describe('', () => {
 
     let prisma;
 
-    beforeAll(() => {
+    beforeAll( async () => {
         prisma = new PrismaClient({
             datasources: {
                 db: {
@@ -42,8 +42,61 @@ describe('', () => {
                 console.log(response.body.msg)
                 expect(response.body.response).toBe(true);
                 return done();
-            })
+            });
 
+    });
+
+    it('Signin test', (done) => {
+        request(app)
+            .post('/api/signin')
+            .send({email: data.email, password: data.password})
+            .set('Content-type', 'application/json')
+            .then((response) => {
+                expect(response.body.response).toBe(true);
+                return done();
+            });
+    });
+
+    it('Signin test, email incorrect', (done) => {
+        request(app)
+            .post('/api/signin')
+            .send({ email: 'sdsad@hotmail.com', password: data.password })
+            .set('Content-type', 'application/json')
+            .then((response) => {
+                expect(response.body.response).toBe(false);
+                return done();
+            })
+    });
+
+    it('Signin test, password incorrect, (7 letters)', (done) => {
+        request(app)
+            .post('/api/signin')
+            .send({email: data.email, password: 5876244})
+            .set('Content-type', 'application/json')
+            .then((response) => {
+                expect(response.body.response).toBe(false)
+                return done();
+            })
+    });
+
+    it('Signin test, password incorrect, (20+ letters)', (done) => {
+        request(app)
+            .post('/api/signin')
+            .send({email: data.email, password: 'jeislaketcbd45@41257G'})
+            .set('Content-type', 'application/json')
+            .then((response) => {
+                expect(response.body.response).toBe(false);
+                return done();
+            })
+    })
+
+    afterAll( async () => {
+        try{
+            await prisma.users.deleteMany();
+            await prisma.$disconnect();
+        }catch(err){
+            console.log('Error: ', err);
+        }
     });
 
 });

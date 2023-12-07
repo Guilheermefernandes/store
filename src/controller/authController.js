@@ -33,7 +33,7 @@ module.exports = {
                 }
             });
         }catch(error){
-            // Criar log no sistema
+            // TODO
         }
 
         if(user === null){
