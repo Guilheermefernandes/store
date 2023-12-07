@@ -9,18 +9,19 @@ module.exports = {
     signin: async (req, res) => {
 
         const { email, password } = req.body;
+        console.log(email, password);
 
         const msg = 'Email/e ou senha inválidos!';
 
         if(!validator.isEmail(email)){
-            res.json(401).json({ response: false, msg });
+            res.json(401).json({ response: false, msg});
             return;
         }
 
         if(password){
             const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,}$/;
             if(!regex.test(password)){
-                res.status(404).json({ response: false, msg });
+                res.status(404).json({ response: false, msg});
                 return;
             }
         }
@@ -37,7 +38,7 @@ module.exports = {
         }
 
         if(user === null){
-            res.status(404).json({ response: false, msg});
+            res.status(404).json({ response: false, msg, teste: 1 });
             return;
         }
 

@@ -281,6 +281,79 @@ module.exports = {
         });
 
     },
+    editAdParts: async (req, res) => {
+
+        let clothing_id = req.params.partId; //Clothing id
+        let part_data = req.params.dataId; // part_data id
+
+        if(part_data === undefined || clothing_id === undefined){
+
+            res.status(403).json({
+                response: false,
+                msg: 'Dados incompletos!'
+            })
+            return;
+
+        }
+
+        if(typeof part_data !== 'number'){
+            part_data = parseInt(part_data);
+        }
+        if(typeof clothing_id !== 'number'){
+            clothing_id = parseInt(clothing_id);
+        }
+
+        const fields = [
+            'color_id',
+            'size_id',
+            'qtd_parts'
+        ];
+
+        const updatePart = {};
+
+        for(const field of fields){
+
+            if(req.body[field]){
+
+                let value;
+
+                if(typeof req.body[field] !== 'number'){
+                    value = req.body[field];
+
+                    value = parseInt(value);
+                }
+
+                updatePart[field] = value;
+                continue;
+            }
+
+        }
+
+        try{
+
+            const update = await prisma.parts_data.update({
+                where: {
+                    id: part_data,
+                    part_id: clothing_id
+                },
+                data: updatePart
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno em nosso servidor!'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            response: true,
+            msg: 'Dados alterados com sucesso!'
+        });
+
+    },
     getAd: async (req, res) => {
 
 

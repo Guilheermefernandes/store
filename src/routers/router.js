@@ -31,6 +31,13 @@ router.post('/ad/edit',
     permission(2),
     adController.editAd
 );
+router.post('/ad/:partId/:dataId', 
+    passport.authenticate('jwt', {session: false}),
+    permission(2),
+    adController.editAdParts
+);
+
+
 
 
 // Rating and Comments

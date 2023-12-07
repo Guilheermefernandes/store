@@ -22,6 +22,7 @@ describe('', () => {
 
     let prisma;
 
+    /*
     beforeAll( async () => {
         prisma = new PrismaClient({
             datasources: {
@@ -31,6 +32,7 @@ describe('', () => {
             }
         });
     });
+    */
 
     it('Signup test', (done) => {
 
