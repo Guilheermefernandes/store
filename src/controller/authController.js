@@ -2,6 +2,7 @@ const validator = require('validator');
 const { PrismaClient, Prisma } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const { generateToken } = require('../config/passport');
+const { v4: uuidv4 } = require('uuid')
 
 const prisma = new PrismaClient();
 
@@ -52,7 +53,14 @@ module.exports = {
             id: user.id
         }
 
-        const token = generateToken(data);
+        const token = await generateToken(data);
+        if(!token){
+            console.log('Error: ', error);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'});
+            return;
+        }
 
         res.status(200).json({ response: true, token});
     },
@@ -72,6 +80,7 @@ module.exports = {
 
         const user = {}
         user.permission = 1;
+        user.unique_indentifier = uuidv4();
 
         for(const field of fields){
             if(req.body[field]){
