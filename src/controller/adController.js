@@ -699,6 +699,48 @@ module.exports = {
             msg: 'Produto adiciondo ao carrinho!' 
         });
 
+    },
+    editCartItems: async (req, res) => {
+
+        const user = req.user;
+
+        const fields = [
+            'color_id',
+            'size_id',
+            'qtd'
+        ];
+
+        
+
+    },
+    removeItemFromCart: async (req, res) => {
+
+        const user = req.user;
+
+        const idGivenPart = req.params.partId;
+
+        try{
+
+            await prisma.shopping_cart.findUnique({
+                where: {
+                    id: idGivenPart,
+                    user_id: user.id
+                }
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(200).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'
+            })
+        }
+
+        res.status(200).json({
+            response: true,
+            msg: 'Camiseta removida!'
+        })
+
     }
 
 }

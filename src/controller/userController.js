@@ -126,5 +126,32 @@ module.exports = {
             msg: 'Atualização feita com suscesso!'
         });
 
+    },
+    deleteUser: async (req, res) => {
+
+        const user = req.user;
+
+        try{
+
+            const deleteUser = await prisma.users.delete({
+                where: {
+                    id: user.id
+                }
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            response: true,
+            msg: 'Usuário deletado!'
+        });
+
     }
 }
