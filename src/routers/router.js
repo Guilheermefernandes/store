@@ -26,16 +26,6 @@ router.put('/me/user/edit',
 router.get('/ads/all',
     adController.getAd
 );
-router.put('/ad/edit',
-    passport.authenticate('jwt', {session: false}),
-    permission(2),
-    adController.editAd
-);
-router.put('/ad/:partId/:dataId', 
-    passport.authenticate('jwt', {session: false}),
-    permission(2),
-    adController.editAdParts
-);
 
 
 

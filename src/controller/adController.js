@@ -547,6 +547,64 @@ module.exports = {
         });
 
     },
+    deletePart: async (req, res) => {
+
+        let clothing_id = req.params.partId;
+
+        if(!clothing_id){
+            res.status(403).json({
+                response: false,
+                msg: 'Dados incompletos!'
+            });
+            return;
+        }
+
+        if(typeof clothing_id !== 'number'){
+            clothing_id = parseInt(clothing_id);
+        }
+
+        try{
+            
+            await prisma.parts_data.deleteMany({
+                where: {
+                    part_id: clothing_id
+                }
+            });
+
+            await prisma.rating.deleteMany({
+                where: {
+                    clothing_id: clothing_id
+                }
+            });
+
+            await prisma.comments.deleteMany({
+                where: {
+                    clothing_id: clothing_id
+                }
+            });
+            
+            await prisma.shopping_cart.deleteMany({
+                where: {
+                    clothing_id: clothing_id
+                }
+            });
+
+            await prisma.clothing_parts.deleteMany({
+                where: {
+                    id: clothing_id
+                }
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+        }
+
+        res.status(200).json({
+            response: true,
+            msg: 'Peça deletada do sistema!'
+        });
+
+    },
     addCart: async (req, res) => {
 
         const user = req.user;

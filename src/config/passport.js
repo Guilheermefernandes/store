@@ -134,16 +134,27 @@ const generateToken = async (data) => {
 
     try{
 
-        await prisma.tokens.create({
-            data: {
-                token: token,
-                date_created: new Date(),
-                user_id: data.id,
-                security_hash: hash,
-                timestamp: current_timestamp
+        const deleteToken = await prisma.tokens.delete({
+            where: {
+                user_id: user.id
             }
         });
-        return token;
+
+        if(deleteToken){
+            await prisma.tokens.create({
+                data: {
+                    token: token,
+                    date_created: new Date(),
+                    user_id: data.id,
+                    security_hash: hash,
+                    timestamp: current_timestamp
+                }
+            });
+            
+            return token;
+        }
+
+        return false;
 
     }catch(err){
         console.log('Error: ', err);

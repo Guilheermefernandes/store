@@ -10,7 +10,6 @@ module.exports = {
     signin: async (req, res) => {
 
         const { email, password } = req.body;
-        console.log(email, password);
 
         const msg = 'Email/e ou senha inválidos!';
 
