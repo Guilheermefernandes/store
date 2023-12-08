@@ -259,6 +259,28 @@ module.exports = {
                 return;
             }
 
+            const rescue = await prisma.clothing_parts.findUnique({
+                where: {
+                    id: clothing.id
+                },
+            });
+
+            for(const field of fields){
+                if(fieldsUpdate[field]){
+                    if(fieldsUpdate[field] === rescue[field]){
+                        delete fieldsUpdate[field];
+                    }
+                }
+            }
+
+            if(Object.keys(fieldsUpdate).length === 0){
+                res.status(200).json({
+                    response: true,
+                    msg: 'Esses dados possui o mesmo valor!'
+                });
+                return;
+            }
+
             await prisma.clothing_parts.update({
                 where: {
                     id: clothing.id
