@@ -15,7 +15,7 @@ router.get('/me/user',
     permission(1),
     userController.getUser
 );
-router.post('/me/user/edit', 
+router.put('/me/user/edit', 
     passport.authenticate('jwt', {session: false}),
     permission(1),
     userController.editUser
@@ -26,12 +26,12 @@ router.post('/me/user/edit',
 router.get('/ads/all',
     adController.getAd
 );
-router.post('/ad/edit',
+router.put('/ad/edit',
     passport.authenticate('jwt', {session: false}),
     permission(2),
     adController.editAd
 );
-router.post('/ad/:partId/:dataId', 
+router.put('/ad/:partId/:dataId', 
     passport.authenticate('jwt', {session: false}),
     permission(2),
     adController.editAdParts
