@@ -6,6 +6,7 @@ const authController = require('../controller/authController');
 const passport = require('passport');
 const adController = require('../controller/adController');
 const permission = require('../middleware/permission');
+const cartController = require('../controller/cartController');
 
 router.post('/signin', authController.signin);
 router.post('/signup', authController.signup);
@@ -47,12 +48,18 @@ router.post('/ad/comment',
 router.post('/add/cart/product',
     passport.authenticate('jwt', {session: false}),
     permission(1),
-    adController.addCart
+    cartController.addCart
 );
 router.put('/update/:partId',
     passport.authenticate('jwt', {session: false}),
     permission(1),
-    adController.editCartItems
+    cartController.editCartItems
 
 );
+router.delete('/cart/:partId/delete',
+    passport.authenticate('jwt', {session: false}),
+    permission(1),
+    cartController.removeItemFromCart
+);
+
 module.exports = router;
