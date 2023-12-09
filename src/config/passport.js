@@ -107,7 +107,7 @@ passport.use(new jwtStrategy(opts, async function(payload, done){
 
     const hash = SHA256(`${query_token.timestamp}${user.unique_indentifier}`).toString();
 
-    if(query_token.security_hash === hash){
+    if(payload.verification === hash){
         return done(null, user);
     }else{
         return done(null, false);

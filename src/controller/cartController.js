@@ -136,6 +136,11 @@ module.exports = {
         });
 
     },
+    myCart: async (req, res) => {
+
+        const user = req.user;
+
+    },
     editCartItems: async (req, res) => {
 
         const user = req.user;
@@ -147,6 +152,14 @@ module.exports = {
                 id: partId
             }
         });
+
+        if(parts_shopping === null){
+            res.status(404).json({
+                response: false,
+                msg: 'Houve uma falha! Tente novamente.'
+            });
+            return;
+        }
 
         let {
             color_id,
@@ -199,7 +212,6 @@ module.exports = {
 
         }
 
-        // TODO
         if(color_id && size_id === undefined){
 
             size_id = parts_shopping.size_id;
@@ -225,13 +237,13 @@ module.exports = {
                 return;
             }
 
-            if(typeof qtd !== 'number'){
-                qtd = parseInt(qtd);
-            }
-
             if(item_shopping){
-                let data;
+                let data = {};
                 if(qtd){
+
+                    if(typeof qtd !== 'number'){
+                        qtd = parseInt(qtd);
+                    }
 
                     let retrievePartData;
                     try{
@@ -266,6 +278,7 @@ module.exports = {
 
                 }
 
+                
                 data.color_id = color_id;
 
                 try{
@@ -326,8 +339,6 @@ module.exports = {
 
         }
 
-
-        // TODO
         if(size_id && color_id === undefined){
 
             color_id = parts_shopping.color_id;
@@ -351,13 +362,13 @@ module.exports = {
                 return;
             }
 
-            if(typeof qtd !== 'number'){
-                qtd = parseInt(qtd);
-            }
-
             if(item_shopping){
-                let data;
+                let data = {};
                 if(qtd !== undefined){
+
+                    if(typeof qtd !== 'number'){
+                        qtd = parseInt(qtd);
+                    }
 
                     let retrievePartData;
                     try{
@@ -391,6 +402,8 @@ module.exports = {
                     }
 
                 }
+
+                data.size_id = size_id;
 
                 try{
 
