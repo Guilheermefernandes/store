@@ -49,5 +49,10 @@ router.post('/add/cart/product',
     permission(1),
     adController.addCart
 );
+router.put('/update/:partId',
+    passport.authenticate('jwt', {session: false}),
+    permission(1),
+    adController.editCartItems
 
+);
 module.exports = router;

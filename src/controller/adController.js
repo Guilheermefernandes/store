@@ -673,6 +673,44 @@ module.exports = {
                 return;
             }
 
+            const customerCart = await prisma.shopping_cart.findFirst({
+                where: {
+                    user_id: user.id,
+                    clothing_id: clothing_id,
+                    color_id: color_id,
+                    size_id: size_id
+                }
+            });
+
+            if(customerCart){
+                
+                if(customerCart.qtd_parts === qtd){
+                    res.status(200).json({
+                        response: true,
+                        msg: 'Você já possui essa configuração em seu carrinho!'
+                    })
+                    return
+                }
+
+                const data = {
+                    qtd_parts: qtd
+                }
+
+                await prisma.shopping_cart.update({
+                    where: {
+                        id: customerCart.id
+                    },
+                    data: data
+                });
+
+                res.status(200).json({
+                    response: true,
+                    msg: 'Atualização de configuração feita com sucesso!'
+                });
+                return;
+
+            }
+
             const data_shopping_cart = {
                 user_id: user.id,
                 clothing_id: clothing.id,
@@ -704,13 +742,188 @@ module.exports = {
 
         const user = req.user;
 
-        const fields = [
-            'color_id',
-            'size_id',
-            'qtd'
-        ];
+        const partId = parseInt(req.params.partId);
 
-        
+        let parts_shopping = await prisma.shopping_cart.findUnique({
+            where: {
+                id: partId
+            }
+        });
+
+        let {
+            color_id,
+            size_id,
+            qtd
+        } = req.body;
+
+        if(color_id && typeof color_id !== 'number'){
+            color_id = parseInt(color_id);
+        };
+
+        if(size_id && typeof size_id !== 'number'){
+            size_id = parseInt(size_id);
+        };
+
+        if(color_id === undefined && size_id === undefined){
+
+            if(typeof qtd !== 'number'){
+                qtd = parseInt(qtd);
+            }
+
+            const data = {
+                qtd_parts: qtd 
+            };
+
+            try{
+
+                const result = await prisma.shopping_cart.updateMany({
+                    where: {
+                        id: partId,
+                        user_id: user.id
+                    },
+                    data: data
+                });
+
+            }catch(err){
+                console.log('Error: ', err)
+                res.status(500).json({
+                    response: false,
+                    msg: 'Ocorreu um erro interno! Tente novamente.'
+                });
+                return;
+            }
+
+            res.status(200).json({
+                response: true,
+                msg: 'Atualização de configuração feita com sucesso!'
+            });
+            return;
+
+        }
+
+        if(color_id && size_id === undefined){
+
+            size_id = parts_shopping.size_id;
+
+            const item_shopping = await prisma.shopping_cart.findFirst({
+                where: {
+                    color_id: color_id,
+                    size_id: size_id,
+                    user_id: user.id,
+                    clothing_id: parts_shopping.clothing_id
+                } 
+            });
+
+            if(typeof qtd !== 'number'){
+                qtd = parseInt(qtd);
+            }
+
+            if(item_shopping){
+                let data;
+                if(qtd !== undefined){
+
+                    data = {
+                        qtd_parts: qtd
+                    };
+
+                }
+
+                try{
+
+                    await prisma.shopping_cart.updateMany({
+                        where: {
+                            id: item_shopping.id
+                        },
+                        data: data
+                    });
+
+                    await prisma.shopping_cart.delete({
+                        where: {
+                            id: parts_shopping.id
+                        }
+                    });
+
+                }catch(err){
+                    console.log('Error: ', err);
+                    res.status(500).json({
+                        response: false,
+                        msg: 'Ocorreu um erro interno! Tente novamente.'
+                    });
+                    return;
+                }
+
+            }
+
+            res.status(200).json({
+                response: true,
+                msg: 'Atualização de configuração feita com sucesso!'
+            });
+            return;
+
+        }
+
+        // Marcado
+        if(size_id && color_id === undefined){
+
+            color_id = parts_shopping.color_id;
+
+            const item_shopping = await prisma.shopping_cart.findFirst({
+                where: {
+                    color_id: color_id,
+                    size_id: size_id,
+                    user_id: user.id,
+                    clothing_id: parts_shopping.clothing_id
+                } 
+            });
+
+            if(typeof qtd !== 'number'){
+                qtd = parseInt(qtd);
+            }
+
+            if(item_shopping){
+                let data;
+                if(qtd !== undefined){
+
+                    data = {
+                        qtd_parts: qtd
+                    };
+
+                }
+
+                try{
+
+                    await prisma.shopping_cart.updateMany({
+                        where: {
+                            id: item_shopping.id
+                        },
+                        data: data
+                    });
+
+                    await prisma.shopping_cart.delete({
+                        where: {
+                            id: parts_shopping.id
+                        }
+                    });
+
+                }catch(err){
+                    console.log('Error: ', err);
+                    res.status(500).json({
+                        response: false,
+                        msg: 'Ocorreu um erro interno! Tente novamente.'
+                    });
+                    return;
+                }
+
+            }
+
+            res.status(200).json({
+                response: true,
+                msg: 'Atualização de configuração feita com sucesso!'
+            });
+            return;
+
+        }
+
 
     },
     removeItemFromCart: async (req, res) => {
