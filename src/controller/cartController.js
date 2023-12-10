@@ -140,6 +140,37 @@ module.exports = {
 
         const user = req.user;
 
+        let cart;
+        try{
+
+            cart = await prisma.shopping_cart.findMany({
+                where: {
+                    user_id: user.id
+                }
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Houve um erro! Tente novamente.'
+            });
+            return;
+        }
+
+
+        let data = {};
+        for(let i=0;i<cart.length;i++){
+
+            // TODO
+
+        }
+
+        res.status(200).json({
+            response: true,
+            data
+        });
+
     },
     editCartItems: async (req, res) => {
 

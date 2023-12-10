@@ -1,5 +1,15 @@
 const { PrismaClient } = require('@prisma/client');
 
+const jimp = require('jimp');
+const path = require('path');
+
+const addImage = async (buffer) => {
+    const generateNameImage = `${uuidv4()}${Date.now()}.jpg`;
+    const img = await jimp.read(buffer);
+    img.cover(500, 500).quality(100).write(`./public/media/${generateNameImage}`);
+    return generateNameImage;
+};
+
 const prisma = new PrismaClient();
 
 module.exports = {
@@ -15,7 +25,7 @@ module.exports = {
             'discount',
             'type_id',
             'product_line_id',
-            'availability'
+            'availability',
         ];
 
         let newAd = {};
@@ -150,6 +160,36 @@ module.exports = {
                     return;
                 }   
             }
+        }
+
+        const imgs = [];
+        if(req.files && req.files.images){
+            for(let i=0;i < req.files.images.length;i++){
+                if(['image/jpg', 'image/png', 'image/jpeg'].includes(req.files.images[i])){
+
+                    const nameImage = await addImage(req.files.image[i].data);
+                    imgs.push({
+                        image_name: nameImage,
+                        clothing_id: clothing.id
+                    });
+                    
+                }
+            }
+        }
+
+        try{
+
+            await prisma.images_clothing.createMany({
+                data: imgs
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro ao salvar as imagens!'
+            });
+            return;
         }
 
         res.status(201).json({

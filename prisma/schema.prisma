@@ -61,6 +61,7 @@ model Clothing_parts {
   rating Rating[]
   comments Comments[]
   shopping_cart Shopping_cart[]
+  images_clothing Images_clothing[]
 
 
   @@map("clothing_parts")
@@ -172,4 +173,16 @@ model Tokens{
   users Users @relation(fields: [user_id], references: [id])
 
   @@map("tokens")
+}
+
+// Images 
+
+model Images_clothing{
+  id Int @id @default(autoincrement())
+  image_name String @db.VarChar(1000)
+  clothing_id Int
+
+  clothing_parts Clothing_parts @relation(fields: [clothing_id], references: [id])
+
+  @@map("images_clothing")
 }
