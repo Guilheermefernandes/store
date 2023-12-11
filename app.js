@@ -2,7 +2,6 @@ const express = require('express');
 const router = require('./src/routers/router');
 const routerAdmim = require('./src/routers/admin');
 const standard = require('./src/routers/standard');
-const fileupload = require('express-fileupload');
 const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
@@ -17,7 +16,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(fileupload());
 
 app.use('/api', router);
 app.use('/api', routerAdmim);

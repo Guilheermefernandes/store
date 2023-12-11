@@ -1,21 +1,9 @@
 const { PrismaClient } = require('@prisma/client');
 
-const jimp = require('jimp');
-const path = require('path');
-
-const addImage = async (buffer) => {
-    const generateNameImage = `${uuidv4()}${Date.now()}.jpg`;
-    const img = await jimp.read(buffer);
-    img.cover(500, 500).quality(100).write(`./public/media/${generateNameImage}`);
-    return generateNameImage;
-};
-
 const prisma = new PrismaClient();
 
 module.exports = {
     createdAd: async (req, res) => {
-
-        //availability -> [pt-br] Disponibilidade -> Object typeOf
 
         const fields = [
             'title',
@@ -25,7 +13,7 @@ module.exports = {
             'discount',
             'type_id',
             'product_line_id',
-            'availability',
+            'availability'
         ];
 
         let newAd = {};
@@ -98,7 +86,7 @@ module.exports = {
             console.log('Error: ', err);
             res.status(500).json({ 
                 response: false, 
-                msg: 'Ocorreu um erro interno! Tente novamente.'});
+                msg: 'Ocorreu um erro ao registar a camiseta! Tente novamente.'});
             return;
         }
 
@@ -124,7 +112,7 @@ module.exports = {
                 if(isNaN(valueColor) || isNaN(valueSize) || isNaN(valueQtd)){
                     res.status(400).json({ 
                         response: false,
-                        msg: 'Ocorreu um erro interno! Tente novamente.'
+                        msg: 'Ocorreu um erro ao configurar a cor e tamanho da peça! Tente novamente.'
                     });
 
                     await prisma.clothing_parts.delete({
@@ -156,46 +144,62 @@ module.exports = {
                     });
 
                     console.log('Error: ', err);
-                    res.status(500).json({ response: false, msg: 'Ocorreu um erro interno! Tente novamente.'});
+                    res.status(500).json({ response: false, msg: 'Ocorreu um erro ao configurar a cor e tamanho da peça! Tente novamente.'});
                     return;
                 }   
             }
         }
 
-        const imgs = [];
-        if(req.files && req.files.images){
-            for(let i=0;i < req.files.images.length;i++){
-                if(['image/jpg', 'image/png', 'image/jpeg'].includes(req.files.images[i])){
-
-                    const nameImage = await addImage(req.files.image[i].data);
-                    imgs.push({
-                        image_name: nameImage,
-                        clothing_id: clothing.id
-                    });
-                    
-                }
+        const archives = req.files
+        const dataImg = [];
+        for(let i=0;i<archives.length;i++){
+            if(['image/jpg', 'image/jpeg', 'image/png'].includes(archives[i].mimetype)){
+                dataImg.push({
+                    image_name: archives[i].filename,
+                    clothing_id: clothing.id 
+                });
             }
         }
+        if(dataImg.length > 0){
 
-        try{
+            try{
 
-            await prisma.images_clothing.createMany({
-                data: imgs
-            });
+                await prisma.images_clothing.createMany({
+                    data: dataImg
+                });
+    
+            }catch(err){
+                console.log('Error: ', err);
+                res.status(500).json({
+                    response: false, 
+                    msg: 'Ocorreu um erro ao configurar a cor e tamanho da peça! Tente novamente.'});
+                return;
+            }
 
-        }catch(err){
-            console.log('Error: ', err);
-            res.status(500).json({
+        }    
+
+        res.status(201).json({
+            response: true,
+            clothing: clothing.id,
+            msg: 'Camisa cadastrada!' 
+        });
+
+    },
+    imagesAd: async (req, res) => {
+
+        const clothing = req.params;
+
+        if(clothing === undefined || clothing === null){
+            res.status(403).json({
                 response: false,
-                msg: 'Ocorreu um erro ao salvar as imagens!'
+                msg: 'Dados incompletos'
             });
             return;
         }
 
-        res.status(201).json({
-            response: true, 
-            msg: 'Camisa cadastrada!' 
-        });
+        if(req.files && req.files.images){
+
+        }
 
     },
     editAd: async (req, res) => {
