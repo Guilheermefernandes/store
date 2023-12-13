@@ -25,7 +25,7 @@ router.put('/me/user/edit',
 // ADS
 
 router.get('/ads/all',
-    adController.getAd
+    adController.listAds
 );
 
 

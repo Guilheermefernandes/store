@@ -185,21 +185,162 @@ module.exports = {
         });
 
     },
-    imagesAd: async (req, res) => {
+    sendImages: async (req, res) => {
 
-        const clothing = req.params;
+        let clothing = req.params.partId;
 
         if(clothing === undefined || clothing === null){
+            res.status(400).json({
+                response: false,
+                msg: 'Dados incompletos'
+            });
+            return;
+        };
+
+        if(typeof clothing !== 'number'){
+            clothing = parseInt(clothing);
+        }
+
+        let clothingImages;
+        try{
+
+            clothingImages = await prisma.images_clothing.findMany({
+                where: {
+                    clothing_id: clothing
+                }
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'
+            });
+            return;
+        }
+
+        if(clothingImages.length === 4){
+            // TODO
+            res.json({
+                response: false,
+                msg: 'Você já atingiu o limite de imagens por peça!'
+            });
+            return;
+        }
+
+        const imgs = req.files;
+        const dataImg = [];
+        for(let i=0;i<imgs.length;i++){
+            dataImg.push({
+                image_name: imgs[i].filename,
+                clothing_id: clothing
+            });
+        };
+
+        const count = 4 - clothingImages.length;
+        if(dataImg.length > count){
+            // TODO
+            res.json({
+                response: false,
+                msg: `Você só pode enviar ${4 - clothingImages.length} imagens!`
+            });
+            return;
+        }
+
+        if(dataImg.length > 0){
+            
+            try{
+
+                await prisma.images_clothing.createMany({
+                    data: dataImg
+                });
+
+            }catch(err){
+                console.log('Error: ', err);
+                res.status(500).json({
+                    response: false,
+                    msg: 'Ocorreu um erro ao salvar as imagens! Tente novamente.'
+                });
+                return;
+            }
+
+        }else{
             res.status(403).json({
+                response: false,
+                msg: 'Não há imagens para salvar!'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            response: true,
+            msg: 'Imagens salvas com sucesso!'
+        });
+
+    },
+    deleteImage: async (req, res) => {
+
+        let imgId = req.params.imageId;
+
+        if(imgId === undefined || imgId === null){
+            res.status(400).json({
                 response: false,
                 msg: 'Dados incompletos'
             });
             return;
         }
 
-        if(req.files && req.files.images){
-
+        if(typeof imgId !== 'number'){
+            imgId = parseInt(imgId);
         }
+
+        let img;
+        try{
+
+            img = await prisma.images_clothing.findUnique({
+                where: {
+                    id: imgId
+                }
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno ao localizar a peça! Tente novamente.'
+            });
+            return;
+        }
+
+        if(img){
+            try{
+
+                await prisma.images_clothing.delete({
+                    where: {
+                        id: img.id
+                    }
+                });
+
+            }catch(err){
+                console.log('Error: ', err);
+                res.status(500).json({
+                    response: false,
+                    msg: 'Ocorreu um erro interno! Tente novamente.'
+                });
+                return;
+            }
+            
+            res.status(200).json({
+                response: false,
+                msg: 'Imagem deletada!'
+            });
+            return;
+        }
+
+        res.status(204).json({
+            response: false,
+            msg: 'Imagem não encontrada!'
+        });
 
     },
     editAd: async (req, res) => {
@@ -443,7 +584,230 @@ module.exports = {
         });
 
     },
+    listAds: async (req, res) => {
+
+        //Pagina desejada
+        const { page = 1 } = req.query;
+
+        // Limite de resultados por página
+        const limit = 10;
+
+        // Ultima página 
+        let lastPage = 1;
+        
+        let countAd;
+        try{
+
+            //obter a quantidade de registros no db
+            countAd = await prisma.clothing_parts.count({});
+            
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'
+            });
+            return;
+        }
+
+        if(countAd !== 0){
+
+            // Descobrir qual a ultima página, ex: 31 / 10 -> 3.1 (M.c) -> 4
+            lastPage = Math.ceil(countAd / limit);
+
+        }else{
+            res.status(500).json({
+                response: false,
+                msg: 'Nnenum registro encontrado!'
+            });
+            return;
+        }
+
+        let result;
+        try{
+
+            // Realizando consulta usando skip e take
+            result = await prisma.clothing_parts.findMany({
+                skip: (page * limit) - limit,
+                take: limit
+            });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno ao resgatar os anuncios! Tente novamente.'
+            });
+            return;
+        }
+
+        if(result.length !== 0){
+
+            for(let i=0;i<result.length;i++){
+
+                try{
+
+                    const listrating = await prisma.rating.findMany({
+                        where: {
+                            clothing_id: result[i].id
+                        }
+                    });
+
+                    if(listrating.length !== 0){
+                        let count = 0;
+                        for(let j=0;j<listrating.length;j++){
+                            count += listrating[j].note;
+                        }
+                    
+                        const calc = count / listrating.length
+
+                        result[i].note = calc;
+
+                    }else{
+                        result[i].note = 0;
+                    }                    
+                    
+
+                }catch(err){
+                    console.log('Error: ', err);
+                    res.status(500).json({
+                        response: false,
+                        msg: 'Ocorreu um erro interno! Tente novamente.'
+                    });
+                    return;
+                }
+
+                // Part data
+                try{
+
+                    const parts_data = await prisma.parts_data.findMany({
+                        where: {
+                            part_id: result[i].id,
+                        }
+                    });
+                    
+                    let resultPartsData = [];
+                    for(let j=0;j<parts_data.length;j++){
+
+                        const color = await prisma.parts_color.findUnique({
+                            where: {
+                                id: parts_data[j].color_id
+                            }
+                        });
+
+                       const size = await prisma.parts_size.findUnique({
+                            where: {
+                                id: parts_data[j].size_id
+                            }
+                        });
+
+                        resultPartsData.push({
+                            qtd: parts_data[j].qtd_parts,
+                            color: color.name_color,
+                            size: size.size
+                        });
+
+
+                        result[i].data = resultPartsData;
+                    }
+
+                }catch(err){
+                    console.log('Error: ', err);
+                    res.status(500).json({
+                        response: false,
+                        msg: 'Ocorreu um erro interno! Tente novamente.'
+                    });
+                    return;
+                }
+
+                // Comments and Evaluations
+                try{
+
+                    const comments = await prisma.comments.findMany({
+                        where: {
+                            clothing_id: result[i].id
+                        },
+                        skip: 0,
+                        take: 10
+                    });
+
+                    const resultComments =  [];
+                    for(let j=0;j<comments.length;j++){
+
+                        const user = await prisma.users.findUnique({
+                            where: {
+                                id: comments[j].user_id
+                            }
+                        });
+
+                        let rating = await prisma.rating.findFirst({
+                            where: {
+                                clothing_id: result[i].id,
+                                user_id: user.id
+                            }
+                        });
+
+                       if(rating === null){
+                            rating = -1; 
+                       }
+
+                        resultComments.push({
+                            user_name: `${user.name} ${user.lastName}`,
+                            email: `${user.email}`,
+                            rating: rating.note,
+                            comment: comments[j].comment
+                        });
+
+                        result[i].comments = resultComments;
+
+                    }
+
+                }catch(err){
+                    console.log('Error: ', err);
+                    res.status(500).json({
+                        response: false,
+                        msg: 'Ocorreu um erro interno! Tente novamente.'
+                    });
+                    return;
+                }
+
+                // Clothing Images
+                try{ 
+
+                    const images = await prisma.images_clothing.findMany({
+                        where: {
+                            clothing_id: result[i].id
+                        }
+                    });
+
+                    for(let j=0;j<images.length;j++){
+                        delete images[j].id;
+                        delete images[j].clothing_id;
+                    }
+
+                    result[i].clothingImages = images;
+
+                }catch(err){
+                    console.log('Error: ', err);
+                    res.status(500).json({
+                        response: false,
+                        msg: 'Ocorreu um erro interno! Tente novamente.'
+                    });
+                    return;
+                }
+
+            }
+
+        }
+
+        res.status(200).json({
+            response: true,
+            result
+        })
+
+    },
     getAd: async (req, res) => {
+
 
 
     },

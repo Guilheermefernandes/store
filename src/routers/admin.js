@@ -13,6 +13,17 @@ routerAdmim.post('/create/ad',
     uploadMulter.array('images', 2),
     adController.createdAd,
 );
+routerAdmim.post('/ad/send/images/:partId',
+    passport.authenticate('jwt', {session: false}),
+    permission(2),
+    uploadMulter.array('images', 4),
+    adController.sendImages
+);
+routerAdmim.delete('/ad/delete/images/:imageId',
+    passport.authenticate('jwt', {session: false}),
+    permission(2),
+    adController.deleteImage
+);
 routerAdmim.put('/ad/edit',
     passport.authenticate('jwt', {session: false}),
     permission(2),
