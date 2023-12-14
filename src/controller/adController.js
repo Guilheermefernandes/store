@@ -641,6 +641,7 @@ module.exports = {
             return;
         }
 
+        // Possivél analise
         if(result.length !== 0){
 
             for(let i=0;i<result.length;i++){
@@ -857,6 +858,10 @@ module.exports = {
                 });
 
                 result.collection = collection.name;
+                result.describe_collection = collection.describe;
+                if(collection.background){
+                    result.collection_background = collection.background;
+                }
                 delete result.collection_id;
 
             }catch(err){
@@ -1068,7 +1073,7 @@ module.exports = {
 
         res.status(200).json({
             response: true,
-            result
+            result,
         });
 
     },
