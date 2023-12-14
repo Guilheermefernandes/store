@@ -808,7 +808,268 @@ module.exports = {
     },
     getAd: async (req, res) => {
 
+        let { product } = req.query;
 
+        if(product === undefined || product === null){
+            res.status(404).json({
+                response: false,
+                msg: 'Dados incompletos!'
+            });
+            return;
+        }
+
+        if(typeof product !==  'number'){
+            product = parseInt(product);
+        }
+
+        let result;
+        try{
+
+            result = await prisma.clothing_parts.findUnique({
+            where: {
+                id: product
+            }
+        });
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'
+            });
+            return;
+        }
+
+        const total = result.price * result.discount;
+        const finalPrice = result.price - (total / 100);
+
+        result.price = finalPrice;
+
+        delete result.date_created;
+
+        if(typeof result.collection_id === 'number'){
+            try{
+
+                const collection = await prisma.collection.findUnique({
+                    where: {
+                        id: result.collection_id
+                    }
+                });
+
+                result.collection = collection.name;
+                delete result.collection_id;
+
+            }catch(err){
+                console.log('Error: ', err);
+                res.status(500).json({
+                    response: false,
+                    msg: 'Ocorreu um erro interno! Tente novamente.'
+                });
+                return;
+            }
+        }else{
+            delete result.collection_id;
+        }
+
+        try{
+
+            const product_line = await prisma.product_line.findUnique({
+                where: {
+                    id: result.product_line_id
+                }
+            });
+
+            result.line = product_line.name;
+            delete result.product_line_id
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'
+            });
+            return;
+        }
+
+        try{
+
+            const type_clothing = await prisma.types.findUnique({
+                where: {
+                    id: result.type_id
+                }
+            });
+
+            result.type = type_clothing.name;
+            delete result.type_id;
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'
+            });
+            return;
+        }
+
+        try{
+
+            const rating = await prisma.rating.findMany({
+                where: {
+                    clothing_id: product
+                }
+            });
+
+            if(rating.length !== 0){
+                let count = 0;  
+                for(let i=0;i<rating.length;i++){
+                    count+= rating[i].note;
+                }
+
+                result.note = count / rating.length;
+            }else{
+                result.note = 0;
+            }
+
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'
+            });
+            return;
+        }
+
+        try{
+
+            let resultPartData = await prisma.parts_data.findMany({
+                where: {
+                    part_id: result.id
+                }
+            });
+
+            const partsData = [];
+            for(let i=0;i<resultPartData.length;i++){
+
+                const color = await prisma.parts_color.findUnique({
+                    where: {
+                        id: resultPartData[i].color_id
+                    }
+                });
+
+                const size = await prisma.parts_size.findUnique({
+                    where: {
+                        id: resultPartData[i].size_id
+                    }
+                });
+
+                partsData.push({
+                    qtd: resultPartData[i].qtd_parts,
+                    color: {
+                        name_color: color.name_color,
+                        hexa_decimal: color.hexa_decimal,
+                        id: color.id
+                    },
+                    size: {
+                        size: size.size,
+                        id: size.id
+                    }
+                });
+
+            }
+
+            result.data = partsData;
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno!'
+            });
+            return;
+        }
+
+        try{
+
+            const comments = await prisma.comments.findMany({
+                where: {
+                    clothing_id: product
+                },
+                skip: 0,
+                take: 10
+            });
+
+            const dataComments = []
+            for(let i=0;i<comments.length;i++){
+                
+                const user = await prisma.users.findUnique({
+                    where: {
+                        id: comments[i].user_id
+                    }
+                });
+
+                const userRating = await prisma.rating.findFirst({
+                    where: {
+                        user_id: user.id,
+                        clothing_id: result.id
+                    }
+                });
+
+                let note;
+                if(userRating !== null){
+                    note = userRating.note
+                }else{
+                    note = 0
+                }
+
+                dataComments.push({
+                    user_name: `${user.name} ${user.lastName}`,
+                    user_email: user.email,
+                    rating: note,
+                    comment: comments[i].comment
+                });
+
+            }
+
+            result.comments = dataComments;
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'
+            });
+            return;
+        }
+
+        try{
+
+            const images = await prisma.images_clothing.findMany({
+                where: {
+                    clothing_id: product
+                }
+            });
+
+            for(let i=0;i<images.length;i++){
+                delete images[i].id
+                delete images[i].clothing_id
+            }
+
+            result.images = images;
+
+        }catch(err){
+            console.log('Error: ', err);
+            res.status(500).json({
+                response: false,
+                msg: 'Ocorreu um erro interno! Tente novamente.'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            response: true,
+            result
+        });
 
     },
     rating: async (req, res) => {
